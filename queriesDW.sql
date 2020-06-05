@@ -49,11 +49,13 @@ order by s.store_id,p.product_id;
 --group by p.product_name,extract(month from tf.t_date)
 --order by extract(month from tf.t_date) desc ;
 
-select p.product_name, sum(tf.total_sale) ,dt.month,rank() over(order by sum(tf.total_sale) desc)
+select * from(
+select p.product_name, sum(tf.total_sale)total_sale,dt.month,rank() over(partition by dt.month order by sum(tf.total_sale) desc) as rank
 from product p,transactions_fact tf,date_table dt
 where p.product_id=tf.product_id  and tf.date_id=dt.date_id and 
 dt.month_num in (select * from (select unique(month_num) from date_table where month_num<=&month order by month_num desc) where rownum<=3)
-group by dt.month,p.product_name;
+group by dt.month,p.product_name
+order by total_sale desc)res where res.rank<=3 order by res.month,res.rank;
 
 
 
